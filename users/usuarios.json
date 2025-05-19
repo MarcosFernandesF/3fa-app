@@ -1,0 +1,7 @@
+[ {
+  "nome" : "nome1",
+  "local" : "BR",
+  "senhaHashBase64" : "CfPaXAyrU6PuS3U4LNZpG7UolgKepD+bs9bU7KrlYaw=",
+  "saltBase64" : "cKqJbEicpA8KnIW20+8OaQ==",
+  "secretTOTP" : "W2JJ4X5OXLOKFSYKCVWCXELBVDPHKDWM"
+} ]
