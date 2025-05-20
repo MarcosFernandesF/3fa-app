@@ -1,8 +1,8 @@
 package client;
 
 public class UserAuthenticator {
-    public String nome;
-    public String secretTOTP;
+    public String Name;
+    public String TOTPSecret;
 
     public UserAuthenticator() {}
 }

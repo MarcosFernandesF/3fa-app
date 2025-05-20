@@ -1,7 +1,7 @@
 package server;
 
-import model.MensagemSegura;
-import model.Usuario;
+import model.SafeMessage;
+import model.User;
 import utils.CryptoUtils;
 
 import javax.crypto.Cipher;
@@ -10,19 +10,19 @@ import javax.crypto.spec.GCMParameterSpec;
 import java.util.Base64;
 
 public class ServerApp {
-    public static void receberMensagem(String nomeUsuario, MensagemSegura msg) throws Exception {
-        Usuario user = UserRepository.findByNome(nomeUsuario)
+    public static void receberMensagem(String userName, SafeMessage safeMessage) throws Exception {
+        User user = UserRepository.SelectUserByName(userName)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado no servidor."));
 
-        byte[] salt = Base64.getDecoder().decode(user.saltBase64);
-        SecretKey chave = CryptoUtils.gerarChave(user.senhaHashBase64, salt, msg.totp);
+        byte[] salt = Base64.getDecoder().decode(user.Salt);
+        SecretKey secretKey = CryptoUtils.GenerateKey(user.PasswordHash, salt, safeMessage.TOTP);
 
         Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-        byte[] iv = Base64.getDecoder().decode(msg.ivBase64);
-        byte[] cipherBytes = Base64.getDecoder().decode(msg.cipherBase64);
-        cipher.init(Cipher.DECRYPT_MODE, chave, new GCMParameterSpec(128, iv));
+        byte[] iv = Base64.getDecoder().decode(safeMessage.IV);
+        byte[] cipherBytes = Base64.getDecoder().decode(safeMessage.CipherText);
+        cipher.init(Cipher.DECRYPT_MODE, secretKey, new GCMParameterSpec(128, iv));
 
-        String mensagem = new String(cipher.doFinal(cipherBytes));
-        System.out.println("📥 Mensagem recebida e decifrada: " + mensagem);
+        String message = new String(cipher.doFinal(cipherBytes));
+        System.out.println("📥 Mensagem recebida e decifrada: " + message);
     }
 }

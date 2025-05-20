@@ -1,17 +1,26 @@
 package utils;
 
+import org.apache.commons.codec.binary.Base32;
+import org.apache.commons.codec.binary.Hex;
+
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.MessageDigest;
 import java.util.Base64;
 
 public class CryptoUtils {
-    public static SecretKey gerarChave(String senhaHashBase64, byte[] salt, String totp) throws Exception {
-        byte[] senhaHash = Base64.getDecoder().decode(senhaHashBase64);
-        byte[] combinado = new byte[senhaHash.length + totp.length()];
-        System.arraycopy(senhaHash, 0, combinado, 0, senhaHash.length);
-        System.arraycopy(totp.getBytes(), 0, combinado, senhaHash.length, totp.length());
-        byte[] chaveFinal = MessageDigest.getInstance("SHA-256").digest(combinado);
-        return new SecretKeySpec(chaveFinal, 0, 16, "AES");
+    public static SecretKey GenerateKey(String passwordHashBase64, byte[] salt, String totp) throws Exception {
+        byte[] passwordHash = Base64.getDecoder().decode(passwordHashBase64);
+        byte[] passwordPlusTOTP = new byte[passwordHash.length + totp.length()];
+        System.arraycopy(passwordHash, 0, passwordPlusTOTP, 0, passwordHash.length);
+        System.arraycopy(totp.getBytes(), 0, passwordPlusTOTP, passwordHash.length, totp.length());
+        byte[] finalKey = MessageDigest.getInstance("SHA-256").digest(passwordPlusTOTP);
+        return new SecretKeySpec(finalKey, 0, 16, "AES");
+    }
+
+    public static String base32ToHex(String base32) {
+        Base32 codec = new Base32();
+        byte[] decoded = codec.decode(base32);
+        return Hex.encodeHexString(decoded);
     }
 }

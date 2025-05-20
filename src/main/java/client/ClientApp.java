@@ -2,8 +2,8 @@ package client;
 
 import com.lambdaworks.crypto.SCrypt;
 import de.taimos.totp.TOTP;
-import model.MensagemSegura;
-import model.Usuario;
+import model.SafeMessage;
+import model.User;
 import server.ServerApp;
 import utils.CryptoUtils;
 import utils.IPUtils;
@@ -18,63 +18,61 @@ import java.util.Optional;
 import java.util.Scanner;
 
 import org.apache.commons.codec.binary.Base32;
-import org.apache.commons.codec.binary.Hex;
 
 public class ClientApp {
 
-    public static void Iniciar() throws Exception {
-        Cadastro();
+    public static void Start() throws Exception {
+        SignUp();
 
         String nome = Login();
 
         if (nome == null) return;
 
-        Mensagem(nome);
+        Message(nome);
     }
 
-    public static void Cadastro() {
+    public static void SignUp() {
         Scanner scanner = new Scanner(System.in);
 
         System.out.println("=== Deseja cadastrar um usuário? (Sim/Nao) ===");
-        String desejaCadastrar = scanner.nextLine();
-        if (!desejaCadastrar.equalsIgnoreCase("Sim")) return;
+        String wannaSignUp = scanner.nextLine();
+        if (!wannaSignUp.equalsIgnoreCase("Sim")) return;
 
         System.out.println("=== Cadastro de Usuário ===");
 
         System.out.print("Nome: ");
-        String nome = scanner.nextLine();
+        String name = scanner.nextLine();
 
         System.out.print("Senha: ");
-        String senha = scanner.nextLine();
+        String password = scanner.nextLine();
 
-        String pais = IPUtils.getPaisAtual();
-        System.out.println("Detectado país: " + pais);
+        String country = IPUtils.GetCurrentCountry();
+        System.out.println("Detectado país: " + country);
 
         try {
             byte[] salt = SecureRandom.getInstanceStrong().generateSeed(16);
-            byte[] senhaHash = SCrypt.scrypt(senha.getBytes(), salt, 16384, 8, 1, 32);
+            byte[] passwordHash = SCrypt.scrypt(password.getBytes(), salt, 16384, 8, 1, 32);
 
             byte[] secretBytes = new byte[20];
             SecureRandom.getInstanceStrong().nextBytes(secretBytes);
-            String secretTOTP = new Base32().encodeToString(secretBytes);
+            String totpSecret = new Base32().encodeToString(secretBytes);
 
-            Usuario user = new Usuario();
-            user.nome = nome;
-            user.local = pais;
-            user.saltBase64 = Base64.getEncoder().encodeToString(salt);
-            user.senhaHashBase64 = Base64.getEncoder().encodeToString(senhaHash);
-            user.secretTOTP = secretTOTP;
-
-            UserRepository.addUsuario(user);
+            User user = new User();
+            user.Name = name;
+            user.Country = country;
+            user.Salt = Base64.getEncoder().encodeToString(salt);
+            user.PasswordHash = Base64.getEncoder().encodeToString(passwordHash);
+            user.TOTPSecret = totpSecret;
+            UserRepository.AddUser(user);
 
             UserAuthenticator userAuthenticator = new UserAuthenticator();
-            userAuthenticator.nome = nome;
-            userAuthenticator.secretTOTP = secretTOTP;
-            UserAuthenticatorStore.addUserAuthenticator(userAuthenticator);
+            userAuthenticator.Name = name;
+            userAuthenticator.TOTPSecret = totpSecret;
+            UserAuthenticatorRepository.addUserAuthenticator(userAuthenticator);
 
-            System.out.println("Usuário cadastrado com sucesso.");
-            System.out.println("Adicione esse segredo no seu app autenticador: " + secretTOTP);
+            System.out.println("Usuário cadastrado com sucesso!");
         } catch (Exception e) {
+            System.out.println("Erro ao cadastrar usuário.");
             System.out.println(e);
         }
     }
@@ -84,53 +82,53 @@ public class ClientApp {
 
         System.out.println("=== Login 3FA ===");
         System.out.print("Digite seu nome de usuário: ");
-        String nome = scanner.nextLine();
+        String name = scanner.nextLine();
 
-        Optional<Usuario> optUser = UserRepository.findByNome(nome);
+        Optional<User> optUser = UserRepository.SelectUserByName(name);
         if (optUser.isEmpty()) {
             System.out.println("Usuário não encontrado.");
             return null;
         }
 
-        Usuario user = optUser.get();
+        User user = optUser.get();
 
         // 1. Verificação da senha (SCrypt)
         System.out.print("Digite sua senha: ");
-        String senhaDigitada = scanner.nextLine();
-        byte[] salt = Base64.getDecoder().decode(user.saltBase64);
-        byte[] senhaHashDigitada = SCrypt.scrypt(senhaDigitada.getBytes(), salt, 16384, 8, 1, 32);
-        String senhaHashDigitadaBase64 = Base64.getEncoder().encodeToString(senhaHashDigitada);
+        String passwordEntered = scanner.nextLine();
+        byte[] salt = Base64.getDecoder().decode(user.Salt);
+        byte[] passwordEnteredHash = SCrypt.scrypt(passwordEntered.getBytes(), salt, 16384, 8, 1, 32);
+        String passwordEnteredHashBase64 = Base64.getEncoder().encodeToString(passwordEnteredHash);
 
-        if (!senhaHashDigitadaBase64.equals(user.senhaHashBase64)) {
+        if (!passwordEnteredHashBase64.equals(user.PasswordHash)) {
             System.out.println("Senha incorreta.");
             return null;
         }
-        System.out.println("✔️ Senha verificada com sucesso.");
+        System.out.println("Senha verificada com sucesso!");
 
         // 2. Verificação da localização
-        String paisAtual = IPUtils.getPaisAtual();
-        if (!paisAtual.equalsIgnoreCase(user.local)) {
-            System.out.println("Localização inválida! Seu IP atual indica: " + paisAtual);
+        String currentCountry = IPUtils.GetCurrentCountry();
+        if (!currentCountry.equalsIgnoreCase(user.Country)) {
+            System.out.println("Localização inválida! Seu IP atual indica: " + currentCountry);
             return null;
         }
-        System.out.println("✔️ Localização verificada: " + paisAtual);
+        System.out.println("Localização verificada: " + currentCountry + "!");
 
         // 3. Verificação do TOTP
         System.out.print("Digite o código TOTP do seu aplicativo autenticador: ");
-        String codigoDigitado = scanner.nextLine();
-        String codigoGerado = TOTP.getOTP(base32ToHex(user.secretTOTP));
+        String codeEntered = scanner.nextLine();
+        String generatedCode = TOTP.getOTP(CryptoUtils.base32ToHex(user.TOTPSecret));
 
-        if (!codigoDigitado.equals(codigoGerado)) {
+        if (!codeEntered.equals(generatedCode)) {
             System.out.println("TOTP incorreto. Acesso negado.");
             return null;
         }
 
-        System.out.println("✔️ TOTP válido. Login realizado com sucesso!");
+        System.out.println("TOTP válido. Login realizado com sucesso!");
 
-        return nome;
+        return name;
     }
 
-    public static void Mensagem(String nome) throws Exception {
+    public static void Message(String userName) throws Exception {
         Scanner scanner = new Scanner(System.in);
 
         while(true)
@@ -138,14 +136,14 @@ public class ClientApp {
             System.out.println("== Enviar Mensagem Segura ==");
 
             System.out.print("Digite a mensagem a ser enviada: ");
-            String textoPlano = scanner.nextLine();
+            String plainText = scanner.nextLine();
 
-            MensagemSegura textoCifrado = ClientApp.enviarMensagem(nome, textoPlano);
-            ServerApp.receberMensagem(nome, textoCifrado);
+            SafeMessage cipherText = ClientApp.SendMessage(userName, plainText);
+            ServerApp.receberMensagem(userName, cipherText);
 
             System.out.print("Deseja enviar outra mensagem?");
-            String resposta = scanner.nextLine().trim();
-            if (!resposta.equalsIgnoreCase("Sim"))
+            String response = scanner.nextLine().trim();
+            if (!response.equalsIgnoreCase("Sim"))
             {
                 System.out.println("Encerrando sessão.");
                 break;
@@ -153,35 +151,29 @@ public class ClientApp {
         }
     }
 
-    public static MensagemSegura enviarMensagem(String nomeUsuario, String textoClaro) throws Exception {
-        Usuario user = UserRepository.findByNome(nomeUsuario)
+    public static SafeMessage SendMessage(String userName, String plainText) throws Exception {
+        User user = UserRepository.SelectUserByName(userName)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
-        String paisAtual = IPUtils.getPaisAtual();
-        if (!paisAtual.equalsIgnoreCase(user.local)) {
+        String currentCountry = IPUtils.GetCurrentCountry();
+        if (!currentCountry.equalsIgnoreCase(user.Country)) {
             throw new SecurityException("Localização inválida! Acesso negado.");
         }
 
-        String totp = TOTP.getOTP(base32ToHex(user.secretTOTP));
-        byte[] salt = Base64.getDecoder().decode(user.saltBase64);
-        SecretKey chave = CryptoUtils.gerarChave(user.senhaHashBase64, salt, totp);
+        String totp = TOTP.getOTP(CryptoUtils.base32ToHex(user.TOTPSecret));
+        byte[] salt = Base64.getDecoder().decode(user.Salt);
+        SecretKey secretKey = CryptoUtils.GenerateKey(user.PasswordHash, salt, totp);
 
         byte[] iv = SecureRandom.getInstanceStrong().generateSeed(12);
         Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
         GCMParameterSpec spec = new GCMParameterSpec(128, iv);
-        cipher.init(Cipher.ENCRYPT_MODE, chave, spec);
-        byte[] cifrado = cipher.doFinal(textoClaro.getBytes());
+        cipher.init(Cipher.ENCRYPT_MODE, secretKey, spec);
+        byte[] cipherText = cipher.doFinal(plainText.getBytes());
 
-        return new MensagemSegura(
+        return new SafeMessage(
                 totp,
                 Base64.getEncoder().encodeToString(iv),
-                Base64.getEncoder().encodeToString(cifrado)
+                Base64.getEncoder().encodeToString(cipherText)
         );
-    }
-
-    public static String base32ToHex(String base32) {
-        Base32 base32Codec = new Base32();
-        byte[] decoded = base32Codec.decode(base32);
-        return Hex.encodeHexString(decoded);
     }
 }
