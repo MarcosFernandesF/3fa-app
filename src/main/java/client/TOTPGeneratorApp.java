@@ -5,6 +5,7 @@ import org.apache.commons.codec.binary.Base32;
 import org.apache.commons.codec.binary.Hex;
 
 import java.util.Optional;
+import java.util.Scanner;
 
 public class TOTPGeneratorApp {
 
@@ -15,11 +16,13 @@ public class TOTPGeneratorApp {
     }
 
     public static void main(String[] args) throws Exception {
-        String nome = "nome1"; // ou peça via Scanner se quiser tornar dinâmico
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Digite o nome do usuário: ");
+        String nome = scanner.nextLine();
 
         Optional<UserAuthenticator> optUser = UserAuthenticatorStore.findByNome(nome);
         if (optUser.isEmpty()) {
-            System.out.println("Usuário não encontrado no secrets.json.");
+            System.out.println("Usuário não encontrado no users-secrets.json.");
             return;
         }
 
