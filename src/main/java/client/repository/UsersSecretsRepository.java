@@ -1,0 +1,68 @@
+package client.repository;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+/**
+ * Repositório de secrets de usuários do lado do cliente.
+ * Responsável por salvar, carregar e consultar os segredos TOTP armazenados localmente.
+ */
+public class UsersSecretsRepository {
+
+    private static final String FILE_PATH = "src/main/resources/client/users-secrets.json";
+    private static final ObjectMapper mapper = new ObjectMapper();
+
+    /**
+     * Obtém a lista completa de segredos de usuários armazenados localmente.
+     * @return Lista de objetos {@link UserSecret}. Se o arquivo não existir, retorna uma lista vazia.
+     */
+    public static List<UserSecret> SelectAll() {
+        try {
+            File f = new File(FILE_PATH);
+            if (!f.exists()) return new ArrayList<>();
+            return mapper.readValue(f, new TypeReference<>() {});
+        } catch (Exception e) {
+            throw new RuntimeException("Erro ao selecionar todas as secrets armazenadas", e);
+        }
+    }
+
+    /**
+     * Salva a lista de segredos de usuários localmente.
+     * @param usersSecrets Lista de {@link UserSecret} a ser salva.
+     */
+    public static void Save(List<UserSecret> usersSecrets) {
+        try {
+            mapper.writerWithDefaultPrettyPrinter().writeValue(new File(FILE_PATH), usersSecrets);
+        } catch (Exception e) {
+            throw new RuntimeException("Erro ao salvar uma user-secret", e);
+        }
+    }
+
+    /**
+     * Adiciona ou atualiza uma user-secret local.
+     * Se já existir uma user-secret com o mesmo nome, ela será substituída.
+     * @param userSecret Objeto {@link UserSecret} a ser adicionado ou atualizado.
+     */
+    public static void Add(UserSecret userSecret) {
+        List<UserSecret> usersSecrets = SelectAll();
+        usersSecrets.removeIf(existing -> existing.Name.equalsIgnoreCase(userSecret.Name));
+        usersSecrets.add(userSecret);
+        Save(usersSecrets);
+    }
+
+    /**
+     * Busca uma user-secret pelo nome do usuário (case-insensitive).
+     * @param name Nome do usuário cuja secret será buscada.
+     * @return Um {@link Optional} com a user-secret correspondente, ou {@link Optional#empty()} se não for encontrada.
+     */
+    public static Optional<UserSecret> SelectByName(String name) {
+        return SelectAll().stream()
+                .filter(user -> user.Name.equalsIgnoreCase(name))
+                .findFirst();
+    }
+}

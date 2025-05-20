@@ -7,10 +7,21 @@ import java.io.BufferedReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+/**
+ * Utilitário para consultar a localização geográfica do endereço IP público da máquina atual.
+ * Utiliza o serviço {@code ipinfo.io} com token de autenticação para obter o país associado ao IP.
+ */
 public class IPUtils {
 
+    /**
+     * Token de autenticação para acesso à API do IPInfo.
+     */
     private static final String TOKEN = "f5a4a4e30122f9";
 
+    /**
+     * Consulta o país atual baseado no endereço IP da máquina.
+     * @return Código do país, por exemplo: "BR", "US", "NL".
+     */
     public static String GetCurrentCountry() {
         try {
             URL url = new URL("https://ipinfo.io/json?token=" + TOKEN);

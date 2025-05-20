@@ -1,7 +1,8 @@
-package server;
+package server.app;
 
 import model.SafeMessage;
-import model.User;
+import server.repository.User;
+import server.repository.UsersRepository;
 import utils.CryptoUtils;
 
 import javax.crypto.Cipher;
@@ -11,7 +12,7 @@ import java.util.Base64;
 
 public class ServerApp {
     public static void receberMensagem(String userName, SafeMessage safeMessage) throws Exception {
-        User user = UserRepository.SelectUserByName(userName)
+        User user = UsersRepository.SelectByName(userName)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado no servidor."));
 
         byte[] salt = Base64.getDecoder().decode(user.Salt);

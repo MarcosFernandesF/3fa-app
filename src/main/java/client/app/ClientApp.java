@@ -1,13 +1,15 @@
-package client;
+package client.app;
 
+import client.repository.UserSecret;
+import client.repository.UsersSecretsRepository;
 import com.lambdaworks.crypto.SCrypt;
 import de.taimos.totp.TOTP;
 import model.SafeMessage;
-import model.User;
-import server.ServerApp;
+import server.repository.User;
+import server.app.ServerApp;
 import utils.CryptoUtils;
 import utils.IPUtils;
-import server.UserRepository;
+import server.repository.UsersRepository;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
@@ -63,12 +65,12 @@ public class ClientApp {
             user.Salt = Base64.getEncoder().encodeToString(salt);
             user.PasswordHash = Base64.getEncoder().encodeToString(passwordHash);
             user.TOTPSecret = totpSecret;
-            UserRepository.AddUser(user);
+            UsersRepository.Add(user);
 
-            UserAuthenticator userAuthenticator = new UserAuthenticator();
-            userAuthenticator.Name = name;
-            userAuthenticator.TOTPSecret = totpSecret;
-            UserAuthenticatorRepository.addUserAuthenticator(userAuthenticator);
+            UserSecret userSecret = new UserSecret();
+            userSecret.Name = name;
+            userSecret.TOTPSecret = totpSecret;
+            UsersSecretsRepository.Add(userSecret);
 
             System.out.println("Usuário cadastrado com sucesso!");
         } catch (Exception e) {
@@ -84,7 +86,7 @@ public class ClientApp {
         System.out.print("Digite seu nome de usuário: ");
         String name = scanner.nextLine();
 
-        Optional<User> optUser = UserRepository.SelectUserByName(name);
+        Optional<User> optUser = UsersRepository.SelectByName(name);
         if (optUser.isEmpty()) {
             System.out.println("Usuário não encontrado.");
             return null;
@@ -116,7 +118,7 @@ public class ClientApp {
         // 3. Verificação do TOTP
         System.out.print("Digite o código TOTP do seu aplicativo autenticador: ");
         String codeEntered = scanner.nextLine();
-        String generatedCode = TOTP.getOTP(CryptoUtils.base32ToHex(user.TOTPSecret));
+        String generatedCode = TOTP.getOTP(CryptoUtils.Base32ToHex(user.TOTPSecret));
 
         if (!codeEntered.equals(generatedCode)) {
             System.out.println("TOTP incorreto. Acesso negado.");
@@ -152,7 +154,7 @@ public class ClientApp {
     }
 
     public static SafeMessage SendMessage(String userName, String plainText) throws Exception {
-        User user = UserRepository.SelectUserByName(userName)
+        User user = UsersRepository.SelectByName(userName)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
         String currentCountry = IPUtils.GetCurrentCountry();
@@ -160,7 +162,7 @@ public class ClientApp {
             throw new SecurityException("Localização inválida! Acesso negado.");
         }
 
-        String totp = TOTP.getOTP(CryptoUtils.base32ToHex(user.TOTPSecret));
+        String totp = TOTP.getOTP(CryptoUtils.Base32ToHex(user.TOTPSecret));
         byte[] salt = Base64.getDecoder().decode(user.Salt);
         SecretKey secretKey = CryptoUtils.GenerateKey(user.PasswordHash, salt, totp);
 

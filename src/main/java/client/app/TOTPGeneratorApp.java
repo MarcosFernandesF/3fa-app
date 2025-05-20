@@ -1,5 +1,7 @@
-package client;
+package client.app;
 
+import client.repository.UserSecret;
+import client.repository.UsersSecretsRepository;
 import de.taimos.totp.TOTP;
 import utils.CryptoUtils;
 
@@ -12,14 +14,14 @@ public class TOTPGeneratorApp {
         System.out.print("Digite o nome do usuário: ");
         String name = scanner.nextLine();
 
-        Optional<UserAuthenticator> optUser = UserAuthenticatorRepository.selectUserSecretByName(name);
+        Optional<UserSecret> optUser = UsersSecretsRepository.SelectByName(name);
         if (optUser.isEmpty()) {
             System.out.println("Usuário não encontrado no users-secrets.json.");
             return;
         }
 
-        UserAuthenticator user = optUser.get();
-        String secretHex = CryptoUtils.base32ToHex(user.TOTPSecret);
+        UserSecret user = optUser.get();
+        String secretHex = CryptoUtils.Base32ToHex(user.TOTPSecret);
 
         System.out.println("Gerador de TOTP para: " + name);
         String lastCode = "";
