@@ -7,8 +7,7 @@ import model.Usuario;
 import server.ServerApp;
 import utils.CryptoUtils;
 import utils.IPUtils;
-import utils.UserStore;
-import client.UserAuthenticatorStore;
+import server.UserRepository;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
@@ -66,7 +65,7 @@ public class ClientApp {
             user.senhaHashBase64 = Base64.getEncoder().encodeToString(senhaHash);
             user.secretTOTP = secretTOTP;
 
-            UserStore.addUsuario(user);
+            UserRepository.addUsuario(user);
 
             UserAuthenticator userAuthenticator = new UserAuthenticator();
             userAuthenticator.nome = nome;
@@ -87,7 +86,7 @@ public class ClientApp {
         System.out.print("Digite seu nome de usuário: ");
         String nome = scanner.nextLine();
 
-        Optional<Usuario> optUser = UserStore.findByNome(nome);
+        Optional<Usuario> optUser = UserRepository.findByNome(nome);
         if (optUser.isEmpty()) {
             System.out.println("Usuário não encontrado.");
             return null;
@@ -155,7 +154,7 @@ public class ClientApp {
     }
 
     public static MensagemSegura enviarMensagem(String nomeUsuario, String textoClaro) throws Exception {
-        Usuario user = UserStore.findByNome(nomeUsuario)
+        Usuario user = UserRepository.findByNome(nomeUsuario)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
         String paisAtual = IPUtils.getPaisAtual();
