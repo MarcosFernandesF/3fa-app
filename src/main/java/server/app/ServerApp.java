@@ -48,6 +48,21 @@ public class ServerApp {
     }
 
     /**
+     * Obtém um usuário cadastrado no servidor pelo nome.
+     * @param name - Nome do usuário.
+     * @return Usuário cadastrado ou nulo.
+     */
+    public static User GetUserByName(String name) {
+        Optional<User> opt = UsersRepository.SelectByName(name);
+        if (opt.isEmpty())
+        {
+            System.out.println("Usuário não encontrado");
+            return null;
+        }
+        return opt.get();
+    }
+
+    /**
      * Valida a senha (1º fator).
      */
     public static boolean IsPasswordCorrect(User user, String typedPassword) throws Exception {
@@ -78,15 +93,11 @@ public class ServerApp {
      * Recebe e decifra uma mensagem segura enviada por um cliente autenticado.
      * O processo utiliza AES-GCM com uma chave derivada de TOTP + senha do usuário.
      *
-     * @param userName     Nome do usuário remetente da mensagem.
+     * @param user Usuário.
      * @param safeMessage  Objeto {@link SafeMessage} contendo a mensagem cifrada, IV e TOTP usado.
      * @throws Exception Se ocorrer erro ao localizar o usuário, derivar a chave ou decifrar a mensagem.
      */
-    public static void ReceiveMessage(String userName, SafeMessage safeMessage) throws Exception {
-        // Recupera usuário no lado do servidor
-        User user = UsersRepository.SelectByName(userName)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado no servidor."));
-
+    public static void ReceiveMessage(User user, SafeMessage safeMessage) throws Exception {
         // Deriva a chave secreta usando o hash da senha, o salt e o TOTP enviado
         byte[] salt = Base64.getDecoder().decode(user.Salt);
         SecretKey secretKey = CryptoUtils.GenerateKey(user.PasswordHash, salt, safeMessage.TOTP);

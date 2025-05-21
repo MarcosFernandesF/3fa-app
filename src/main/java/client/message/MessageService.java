@@ -22,17 +22,17 @@ public class MessageService {
 
   /**
    * Inicia o processo de envio de mensagens.
-   * @param userName Nome do usuário.
+   * @param user Usuário.
    */
-  public static void Start(String userName) throws Exception {
+  public static void Start(User user) throws Exception {
     Scanner scanner = new Scanner(System.in);
     while (true) {
       System.out.println("== Enviar Mensagem Segura ==");
       System.out.print("Digite a mensagem a ser enviada: ");
       String plainText = scanner.nextLine();
 
-      SafeMessage cipherText = GetSafeMessage(userName, plainText);
-      ServerApp.ReceiveMessage(userName, cipherText);
+      SafeMessage cipherText = GetSafeMessage(user, plainText);
+      ServerApp.ReceiveMessage(user, cipherText);
 
       System.out.print("Deseja enviar outra mensagem? (Sim/Nao): ");
       String response = scanner.nextLine().trim();
@@ -45,14 +45,11 @@ public class MessageService {
 
   /**
    * Obtém uma mensagem segura utilizando AES-GCM e chave derivada do TOTP.
-   * @param userName  Nome do usuário remetente
+   * @param user Usuário
    * @param plainText Mensagem em texto claro a ser cifrada
    * @return Objeto {@link SafeMessage} contendo TOTP, IV e texto cifrado
    */
-  public static SafeMessage GetSafeMessage(String userName, String plainText) throws Exception {
-    User user = UsersRepository.SelectByName(userName)
-      .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
-
+  public static SafeMessage GetSafeMessage(User user, String plainText) throws Exception {
     String totp = TOTP.getOTP(CryptoUtils.Base32ToHex(user.TOTPSecret));
     byte[] salt = Base64.getDecoder().decode(user.Salt);
     SecretKey secretKey = CryptoUtils.GenerateKey(user.PasswordHash, salt, totp);

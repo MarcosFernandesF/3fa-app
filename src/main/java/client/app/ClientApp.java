@@ -11,8 +11,13 @@ public class ClientApp {
 
         if (wannaSignUp) SignUpService.Start();
 
-        String userName = LoginService.Start();
+        User user = LoginService.Start();
 
-        if (userName != null) MessageService.Start(userName);
+        if (user == null) {
+            System.out.println("Erro ao fazer login");
+            return;
+        }
+
+        MessageService.Start(user);
     }
 }

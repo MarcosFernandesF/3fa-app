@@ -18,7 +18,7 @@ public class LoginService {
    * @return O nome do usuário autenticado com sucesso ou null em caso de falha.
    * @throws Exception Em caso de erro durante os processos de autenticação.
    */
-  public static String Start() throws Exception {
+  public static User Start() throws Exception {
     Scanner sc = new Scanner(System.in);
 
     System.out.println("=== Login de Usuário ===");
@@ -28,12 +28,8 @@ public class LoginService {
     System.out.print("Senha: ");
     String typedPassword = sc.nextLine();
 
-    Optional<User> opt = UsersRepository.SelectByName(typedName);
-    if (opt.isEmpty())
-    {
-      System.out.println("Usuário não encontrado");
-    }
-    User user = opt.get();
+    User user = ServerApp.GetUserByName(typedName);
+    if (user == null) return null;
 
     boolean isPasswordCorrect = ServerApp.IsPasswordCorrect(user, typedPassword);
     if (!isPasswordCorrect) return null;
@@ -49,6 +45,6 @@ public class LoginService {
     if (!isTOTPCorrect) return null;
     System.out.println("TOTP Correto - 3º Fator concluído.");
 
-    return user.Name;
+    return user;
   }
 }
