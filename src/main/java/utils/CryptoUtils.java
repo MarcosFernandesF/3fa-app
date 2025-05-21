@@ -27,15 +27,29 @@ public class CryptoUtils {
     /**
      * Inicializa a chave de criptografia de arquivos a partir de uma senha mestra.
      * DEVE ser chamado uma vez no início da aplicação.
-     * @param masterPassword Senha mestra para derivar a chave.
-     * @param salt Salt para a derivação da chave (pode ser fixo para este propósito).
      */
-    public static void InitializeFileEncryptionKey(String masterPassword, String salt) throws Exception {
-        byte[] derivedKey = SCrypt.scrypt(
-                masterPassword.getBytes(StandardCharsets.UTF_8),
-                salt.getBytes(StandardCharsets.UTF_8),
-                16384, 8, 1, 32);
-        fileEncryptionKey = new SecretKeySpec(derivedKey, "AES");
+    public static void InitializeFileEncryption() throws Exception {
+        String masterPassword = System.getenv("APP_MASTER_PASSWORD");
+        String fileEncryptionSalt = System.getenv("APP_ENCRYPTION_SALT");
+
+        if (masterPassword == null || masterPassword.isEmpty()) {
+            System.err.println("ERRO CRÍTICO: Senha mestra não definida na variável de ambiente APP_MASTER_PASSWORD.");
+            System.err.println("A aplicação não pode operar de forma segura sem ela.");
+            System.exit(1); // Termina a aplicação se a senha não estiver configurada
+        }
+
+        try {
+            byte[] derivedKey = SCrypt.scrypt(
+                    masterPassword.getBytes(StandardCharsets.UTF_8),
+                    fileEncryptionSalt.getBytes(StandardCharsets.UTF_8),
+                    16384, 8, 1, 32);
+            fileEncryptionKey = new SecretKeySpec(derivedKey, "AES");
+            System.out.println("Mecanismo de criptografia de arquivo inicializado.");
+        } catch (Exception e) {
+            System.err.println("Falha ao inicializar o mecanismo de criptografia de arquivo: " + e.getMessage());
+            e.printStackTrace();
+            System.exit(1);
+        }
     }
 
     /**
