@@ -16,15 +16,26 @@ public class TOTPGeneratorApp {
         CryptoUtils.InitializeFileEncryption();
 
         Scanner scanner = new Scanner(System.in);
-        System.out.print("Nome do usuário: ");
-        String name = scanner.nextLine();
+        UserSecret user = null;
+        String name;
 
-        Optional<UserSecret> optUser = UsersSecretsRepository.SelectByName(name);
-        if (optUser.isEmpty()) {
-            System.out.println("Usuário não encontrado no users-secrets.txt.");
-            return;
+        while (true) {
+            System.out.print("Nome do usuário (ou digite 'sair' para terminar): ");
+            name = scanner.nextLine();
+
+            if ("sair".equalsIgnoreCase(name)) {
+                System.out.println("Encerrando o gerador TOTP.");
+                return;
+            }
+
+            Optional<UserSecret> optUser = UsersSecretsRepository.SelectByName(name); //
+            if (optUser.isPresent()) {
+                user = optUser.get();
+                break;
+            } else {
+                System.out.println("Usuário '" + name + "' não encontrado no users-secrets.txt. Tente novamente."); //
+            }
         }
-        UserSecret user = optUser.get();
         String secretHex = CryptoUtils.Base32ToHex(user.TOTPSecret);
 
         System.out.println("Gerador de TOTP para: " + name);
