@@ -1,3 +1,6 @@
+#### Projeto da disciplina de Segurança da Informação e de Redes - UFSC
+#### Autor 1 - Marcos Roberto Fernandes Filho (22100915)
+#### Autor 2 - José Victor Machado de Vasconcelos (22100906)
 # Aplicação de Autenticação de Três Fatores (3FA) e Mensagens Seguras
 
 Este projeto demonstra um sistema de autenticação de três fatores (senha, localização geográfica e TOTP) e o envio de mensagens criptografadas entre um cliente e um servidor simulados. A aplicação é dividida em duas partes principais:
