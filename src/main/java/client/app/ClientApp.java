@@ -3,6 +3,7 @@ package client.app;
 import client.auth.LoginService;
 import client.auth.SignUpService;
 import client.message.MessageService;
+import server.repository.User;
 
 public class ClientApp {
 
