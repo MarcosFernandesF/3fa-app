@@ -50,26 +50,18 @@ public class ServerApp {
     /**
      * Valida a senha (1º fator).
      */
-    public static boolean IsPasswordCorrect(String name, String password) throws Exception {
-        Optional<User> opt = UsersRepository.SelectByName(name);
-        if (opt.isEmpty()) return false;
-        User user = opt.get();
-
+    public static boolean IsPasswordCorrect(User user, String typedPassword) throws Exception {
         byte[] salt = Base64.getDecoder().decode(user.Salt);
-        byte[] enteredHash = SCrypt.scrypt(password.getBytes(), salt, 16384, 8, 1, 32);
-        String enteredHashBase64 = Base64.getEncoder().encodeToString(enteredHash);
+        byte[] typedPasswordHash = SCrypt.scrypt(typedPassword.getBytes(), salt, 16384, 8, 1, 32);
+        String typedPasswordHashBase64 = Base64.getEncoder().encodeToString(typedPasswordHash);
 
-        return enteredHashBase64.equals(user.PasswordHash);
+        return typedPasswordHashBase64.equals(user.PasswordHash);
     }
 
     /**
      * Valida a localização por IP (2º fator).
      */
-    public static boolean IsLocationCorrect(String name) {
-        Optional<User> opt = UsersRepository.SelectByName(name);
-        if (opt.isEmpty()) return false;
-        User user = opt.get();
-
+    public static boolean IsLocationCorrect(User user) {
         String currentCountry = IPUtils.GetCurrentCountry();
         return currentCountry.equalsIgnoreCase(user.Country);
     }
@@ -77,13 +69,9 @@ public class ServerApp {
     /**
      * Valida o código TOTP (3º fator).
      */
-    public static boolean IsTOTPCorrect(String name, String totp) {
-        Optional<User> opt = UsersRepository.SelectByName(name);
-        if (opt.isEmpty()) return false;
-        User user = opt.get();
-
+    public static boolean IsTOTPCorrect(User user, String typedTOTP) {
         String expectedTotp = TOTP.getOTP(CryptoUtils.Base32ToHex(user.TOTPSecret));
-        return expectedTotp.equals(totp);
+        return expectedTotp.equals(typedTOTP);
     }
 
     /**

@@ -34,14 +34,14 @@ public class SignUpService {
     System.out.println("=== Cadastro de Usuário ===");
 
     System.out.print("Nome: ");
-    String name = scanner.nextLine();
+    String typedName = scanner.nextLine();
 
     System.out.print("Senha: ");
-    String password = scanner.nextLine();
+    String typedPassword = scanner.nextLine();
 
     try {
-      String totpSecret = ServerApp.RegisterUser(name, password);
-      UsersSecretsRepository.Add(new UserSecret(name, totpSecret));
+      String totpSecret = ServerApp.RegisterUser(typedName, typedPassword);
+      UsersSecretsRepository.Add(new UserSecret(typedName, totpSecret));
       System.out.println("Usuário cadastrado com sucesso!");
     } catch (Exception e) {
       System.out.println("Erro ao cadastrar usuário.");

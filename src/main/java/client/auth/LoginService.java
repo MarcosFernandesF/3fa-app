@@ -1,8 +1,11 @@
 package client.auth;
 
 import server.repository.User;
+
+import java.util.Optional;
 import java.util.Scanner;
 import server.app.ServerApp;
+import server.repository.UsersRepository;
 
 /**
  * Serviço responsável por realizar o processo completo de login 3FA:
@@ -21,23 +24,31 @@ public class LoginService {
     System.out.println("=== Login de Usuário ===");
 
     System.out.print("Nome: ");
-    String name = sc.nextLine();
+    String typedName = sc.nextLine();
     System.out.print("Senha: ");
-    String password = sc.nextLine();
-    boolean isPasswordCorrect = ServerApp.IsPasswordCorrect(name, password);
+    String typedPassword = sc.nextLine();
+
+    Optional<User> opt = UsersRepository.SelectByName(typedName);
+    if (opt.isEmpty())
+    {
+      System.out.println("Usuário não encontrado");
+    }
+    User user = opt.get();
+
+    boolean isPasswordCorrect = ServerApp.IsPasswordCorrect(user, typedPassword);
     if (!isPasswordCorrect) return null;
     System.out.println("Senha correta - 1º Fator concluído.");
 
-    boolean isLocationCorrect = ServerApp.IsLocationCorrect(name);
+    boolean isLocationCorrect = ServerApp.IsLocationCorrect(user);
     if (!isLocationCorrect) return null;
     System.out.println("Localização correta - 2º Fator concluído.");
 
     System.out.print("Código TOTP: ");
     String totp = sc.nextLine();
-    boolean isTOTPCorrect = ServerApp.IsTOTPCorrect(name, totp);
+    boolean isTOTPCorrect = ServerApp.IsTOTPCorrect(user, totp);
     if (!isTOTPCorrect) return null;
     System.out.println("TOTP Correto - 3º Fator concluído.");
 
-    return name;
+    return user.Name;
   }
 }
