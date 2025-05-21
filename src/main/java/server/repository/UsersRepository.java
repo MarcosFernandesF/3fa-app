@@ -2,8 +2,10 @@ package server.repository;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import utils.CryptoUtils;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.util.*;
 
 /**
@@ -12,7 +14,7 @@ import java.util.*;
  */
 public class UsersRepository {
 
-    private static final String FILE_PATH = "src/main/resources/server/users.json";
+    private static final String FILE_PATH = "src/main/resources/server/users.txt";
     private static final ObjectMapper mapper = new ObjectMapper();
 
     /**
@@ -22,10 +24,17 @@ public class UsersRepository {
     public static List<User> SelectAll() {
         try {
             File f = new File(FILE_PATH);
-            if (!f.exists()) return new ArrayList<>();
-            return mapper.readValue(f, new TypeReference<>() {});
+            if (!f.exists() || f.length() == 0) return new ArrayList<>();
+
+            String encryptedData = Files.readString(f.toPath());
+            if (encryptedData.trim().isEmpty()) return new ArrayList<>();
+
+            String jsonData = CryptoUtils.DecryptFileData(encryptedData);
+            return mapper.readValue(jsonData, new TypeReference<>() {});
         } catch (Exception e) {
-            throw new RuntimeException("Erro ao selecionar todos usuários", e);
+            System.err.println("Erro ao ler ou descriptografar o repositório de usuários: " + e.getMessage());
+            e.printStackTrace();
+            return new ArrayList<>();
         }
     }
 
@@ -35,9 +44,11 @@ public class UsersRepository {
      */
     public static void Save(List<User> users) {
         try {
-            mapper.writerWithDefaultPrettyPrinter().writeValue(new File(FILE_PATH), users);
+            String jsonData = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(users);
+            String encryptedData = CryptoUtils.EncryptFileData(jsonData);
+            Files.writeString(new File(FILE_PATH).toPath(), encryptedData);
         } catch (Exception e) {
-            throw new RuntimeException("Erro ao salvar usuários", e);
+            throw new RuntimeException("Erro ao salvar usuários criptografados", e);
         }
     }
 

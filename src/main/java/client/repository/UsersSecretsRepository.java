@@ -2,8 +2,10 @@ package client.repository;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import utils.CryptoUtils;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -14,7 +16,7 @@ import java.util.Optional;
  */
 public class UsersSecretsRepository {
 
-    private static final String FILE_PATH = "src/main/resources/client/users-secrets.json";
+    private static final String FILE_PATH = "src/main/resources/client/users-secrets.txt";
     private static final ObjectMapper mapper = new ObjectMapper();
 
     /**
@@ -24,10 +26,17 @@ public class UsersSecretsRepository {
     public static List<UserSecret> SelectAll() {
         try {
             File f = new File(FILE_PATH);
-            if (!f.exists()) return new ArrayList<>();
-            return mapper.readValue(f, new TypeReference<>() {});
+            if (!f.exists() || f.length() == 0) return new ArrayList<>(); // Se o arquivo não existe ou está vazio
+
+            String encryptedData = Files.readString(f.toPath());
+            if (encryptedData.trim().isEmpty()) return new ArrayList<>(); // Se o conteúdo lido for vazio
+
+            String jsonData = CryptoUtils.DecryptFileData(encryptedData); // Descriptografa os dados
+            return mapper.readValue(jsonData, new TypeReference<>() {});
         } catch (Exception e) {
-            throw new RuntimeException("Erro ao selecionar todas as secrets armazenadas", e);
+            System.err.println("Erro ao ler ou descriptografar o repositório de segredos de usuário: " + e.getMessage());
+            e.printStackTrace();
+            return new ArrayList<>();
         }
     }
 
@@ -37,9 +46,11 @@ public class UsersSecretsRepository {
      */
     public static void Save(List<UserSecret> usersSecrets) {
         try {
-            mapper.writerWithDefaultPrettyPrinter().writeValue(new File(FILE_PATH), usersSecrets);
+            String jsonData = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(usersSecrets);
+            String encryptedData = CryptoUtils.EncryptFileData(jsonData);
+            Files.writeString(new File(FILE_PATH).toPath(), encryptedData);
         } catch (Exception e) {
-            throw new RuntimeException("Erro ao salvar uma user-secret", e);
+            throw new RuntimeException("Erro ao salvar segredos de usuário criptografados", e);
         }
     }
 
@@ -62,7 +73,7 @@ public class UsersSecretsRepository {
      */
     public static Optional<UserSecret> SelectByName(String name) {
         return SelectAll().stream()
-                .filter(user -> user.Name.equalsIgnoreCase(name))
+                .filter(userSecret -> userSecret.Name.equalsIgnoreCase(name))
                 .findFirst();
     }
 }

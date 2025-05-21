@@ -1,7 +1,0 @@
-[ {
-  "Name" : "nome1",
-  "Country" : "BR",
-  "PasswordHash" : "jk6pQLVzBPikCrFT/cxdLDdrqKnG5uXgBHNo1cwUjlA=",
-  "Salt" : "jJasYo8MSSXZU08xNozAqg==",
-  "TOTPSecret" : "HR6XCDUVUBCT6TGBXHPLAO4P5QLABW3H"
-} ]

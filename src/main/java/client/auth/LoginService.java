@@ -35,7 +35,7 @@ public class LoginService {
 
     Optional<UserSecret> optUserSecret = UsersSecretsRepository.SelectByName(typedName);
     if (optUserSecret.isEmpty()) {
-      System.out.println("Usuário não encontrado no users-secrets.json.");
+      System.out.println("Usuário não encontrado no users-secrets.txt.");
       return null;
     }
 
