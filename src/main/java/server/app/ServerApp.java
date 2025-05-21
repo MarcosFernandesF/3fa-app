@@ -2,7 +2,6 @@ package server.app;
 
 import com.lambdaworks.crypto.SCrypt;
 import de.taimos.totp.TOTP;
-import model.SafeMessage;
 import org.apache.commons.codec.binary.Base32;
 import server.repository.User;
 import server.repository.UsersRepository;
@@ -148,14 +147,6 @@ public class ServerApp {
         return expectedTotp.equals(typedTOTP);
     }
 
-    /**
-     * Recebe e decifra uma mensagem segura enviada por um cliente autenticado.
-     * O processo utiliza AES-GCM com uma chave derivada de TOTP + senha do usuário.
-     *
-     * @param userName Nome do usuário.
-     * @param safeMessage  Objeto {@link SafeMessage} contendo a mensagem cifrada, IV e TOTP usado.
-     * @throws Exception Se ocorrer erro ao localizar o usuário, derivar a chave ou decifrar a mensagem.
-     */
     /**
      * Recebe e decifra uma mensagem segura enviada por um cliente autenticado.
      * A mensagem é uma string Base64 contendo IV + CipherText.
