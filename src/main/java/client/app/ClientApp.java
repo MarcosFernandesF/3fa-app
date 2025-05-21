@@ -15,7 +15,7 @@ public class ClientApp {
         User user = LoginService.Start();
 
         if (user == null) {
-            System.out.println("Erro ao fazer login");
+            System.out.println("Erro ao fazer login!");
             return;
         }
 

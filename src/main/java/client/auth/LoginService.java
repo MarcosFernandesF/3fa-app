@@ -16,7 +16,6 @@ public class LoginService {
   /**
    * Inicia o processo de login com autenticação 3FA.
    * @return O nome do usuário autenticado com sucesso ou null em caso de falha.
-   * @throws Exception Em caso de erro durante os processos de autenticação.
    */
   public static User Start() throws Exception {
     Scanner sc = new Scanner(System.in);
@@ -31,19 +30,9 @@ public class LoginService {
     User user = ServerApp.GetUserByName(typedName);
     if (user == null) return null;
 
-    boolean isPasswordCorrect = ServerApp.IsPasswordCorrect(user, typedPassword);
-    if (!isPasswordCorrect) return null;
-    System.out.println("Senha correta - 1º Fator concluído.");
+    boolean isAuthenticated = ServerApp.IsUserAuthenticated(user, typedPassword);
 
-    boolean isLocationCorrect = ServerApp.IsLocationCorrect(user);
-    if (!isLocationCorrect) return null;
-    System.out.println("Localização correta - 2º Fator concluído.");
-
-    System.out.print("Código TOTP: ");
-    String totp = sc.nextLine();
-    boolean isTOTPCorrect = ServerApp.IsTOTPCorrect(user, totp);
-    if (!isTOTPCorrect) return null;
-    System.out.println("TOTP Correto - 3º Fator concluído.");
+    if (!isAuthenticated) return null;
 
     return user;
   }

@@ -4,6 +4,7 @@ import com.lambdaworks.crypto.SCrypt;
 import de.taimos.totp.TOTP;
 import model.SafeMessage;
 import org.apache.commons.codec.binary.Base32;
+import server.auth.AuthenticationService;
 import server.repository.User;
 import server.repository.UsersRepository;
 import utils.CryptoUtils;
@@ -25,7 +26,7 @@ public class ServerApp {
      * Cadastra um novo usuário no servidor.
      * @param name Nome do usuário
      * @param password Senha em texto claro
-     * @return TOTP secret para ser armazenado no cliente
+     * @return TOTP secret para ser armazenado no cliente.
      */
     public static String RegisterUser(String name, String password) throws Exception {
         String country = IPUtils.GetCurrentCountry();
@@ -63,30 +64,14 @@ public class ServerApp {
     }
 
     /**
-     * Valida a senha (1º fator).
+     * Verifica se o usuário passou na autenticação de 3 fatores.
+     *
+     * @param user Usuário já recuperado do repositório.
+     * @param typedPassword Senha informada pelo usuário.
+     * @return true se os três fatores forem validados com sucesso, false caso contrário.
      */
-    public static boolean IsPasswordCorrect(User user, String typedPassword) throws Exception {
-        byte[] salt = Base64.getDecoder().decode(user.Salt);
-        byte[] typedPasswordHash = SCrypt.scrypt(typedPassword.getBytes(), salt, 16384, 8, 1, 32);
-        String typedPasswordHashBase64 = Base64.getEncoder().encodeToString(typedPasswordHash);
-
-        return typedPasswordHashBase64.equals(user.PasswordHash);
-    }
-
-    /**
-     * Valida a localização por IP (2º fator).
-     */
-    public static boolean IsLocationCorrect(User user) {
-        String currentCountry = IPUtils.GetCurrentCountry();
-        return currentCountry.equalsIgnoreCase(user.Country);
-    }
-
-    /**
-     * Valida o código TOTP (3º fator).
-     */
-    public static boolean IsTOTPCorrect(User user, String typedTOTP) {
-        String expectedTotp = TOTP.getOTP(CryptoUtils.Base32ToHex(user.TOTPSecret));
-        return expectedTotp.equals(typedTOTP);
+    public static Boolean IsUserAuthenticated(User user, String typedPassword) throws Exception {
+        return AuthenticationService.Authenticate(user, typedPassword);
     }
 
     /**
