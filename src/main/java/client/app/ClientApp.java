@@ -6,9 +6,6 @@ import client.message.MessageService;
 import client.repository.UserSecret;
 import utils.CryptoUtils;
 
-import java.security.SecureRandom;
-import java.util.Base64;
-
 public class ClientApp {
 
     public static void main(String[] args) throws Exception

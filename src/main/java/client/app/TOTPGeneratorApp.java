@@ -3,11 +3,8 @@ package client.app;
 import client.repository.UserSecret;
 import client.repository.UsersSecretsRepository;
 import de.taimos.totp.TOTP;
-import server.app.ServerApp;
 import utils.CryptoUtils;
 
-import java.security.SecureRandom;
-import java.util.Base64;
 import java.util.Optional;
 import java.util.Scanner;
 
