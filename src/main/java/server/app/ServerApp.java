@@ -4,7 +4,6 @@ import com.lambdaworks.crypto.SCrypt;
 import de.taimos.totp.TOTP;
 import model.SafeMessage;
 import org.apache.commons.codec.binary.Base32;
-import server.auth.AuthenticationService;
 import server.repository.User;
 import server.repository.UsersRepository;
 import utils.CryptoUtils;
@@ -153,17 +152,14 @@ public class ServerApp {
 
         User user = GetUserByName(userName);
 
-        // Usa o TOTP que foi usado no cliente
         SecretKey secretKey = CryptoUtils.GenerateKeyFromTOTP(user.TOTPSecret);
 
-        // Inicializa o modo de decifragem AES-GCM
         Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
         byte[] iv = Base64.getDecoder().decode(safeMessage.IV);
         byte[] cipherBytes = Base64.getDecoder().decode(safeMessage.CipherText);
         GCMParameterSpec spec = new GCMParameterSpec(128, iv);
         cipher.init(Cipher.DECRYPT_MODE, secretKey, spec);
 
-        // Realiza a decifragem e exibe a mensagem
         String message = new String(cipher.doFinal(cipherBytes));
         System.out.println("Mensagem recebida e decifrada: " + message);
     }

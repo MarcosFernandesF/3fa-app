@@ -7,7 +7,6 @@ import org.apache.commons.codec.binary.Hex;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.MessageDigest;
-import java.util.Base64;
 
 /**
  * Utilitário de funções criptográficas para o sistema de autenticação 3FA.
@@ -16,9 +15,8 @@ import java.util.Base64;
 public class CryptoUtils {
 
     /**
-     * Gera uma chave simétrica AES de 128 bits a partir de um hash de senha, um salt e um código TOTP.
-     * Combina o hash da senha com o TOTP como entrada para um SHA-256, e usa os primeiros 16 bytes como chave AES.
-     * @param totpSecret                Código TOTP atual (Time-based One-Time Password).
+     * Gera uma chave simétrica AES de 128 bits a partir do segredo TOTP.
+     * @param totpSecret Segredo TOTP em base32.
      * @return Chave secreta {@link SecretKey} derivada para uso com AES.
      */
     public static SecretKey GenerateKeyFromTOTP(String totpSecret) throws Exception {

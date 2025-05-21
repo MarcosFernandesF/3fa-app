@@ -51,6 +51,7 @@ public class MessageService {
    * @return Objeto {@link SafeMessage} contendo TOTP, IV e texto cifrado
    */
   public static SafeMessage GetSafeMessage(String totpSecret, String plainText) throws Exception {
+
       SecretKey secretKey = CryptoUtils.GenerateKeyFromTOTP(totpSecret);
 
       byte[] iv = SecureRandom.getInstanceStrong().generateSeed(12);
