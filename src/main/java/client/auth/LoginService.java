@@ -29,6 +29,10 @@ public class LoginService {
     System.out.print("Senha: ");
     String typedPassword = sc.nextLine();
 
+    boolean isAuthenticated = ServerApp.IsUserAuthenticated(typedName, typedPassword);
+
+    if (!isAuthenticated) return null;
+
     Optional<UserSecret> optUserSecret = UsersSecretsRepository.SelectByName(typedName);
     if (optUserSecret.isEmpty()) {
       System.out.println("Usuário não encontrado no users-secrets.json.");
@@ -36,9 +40,5 @@ public class LoginService {
     }
 
     return optUserSecret.get();
-
-    // boolean isAuthenticated = ServerApp.IsUserAuthenticated(typedName, typedPassword);
-
-    // if (!isAuthenticated) return null;
   }
 }
