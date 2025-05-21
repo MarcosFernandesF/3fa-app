@@ -26,15 +26,15 @@ public class UsersSecretsRepository {
     public static List<UserSecret> SelectAll() {
         try {
             File f = new File(FILE_PATH);
-            if (!f.exists() || f.length() == 0) return new ArrayList<>(); // Se o arquivo não existe ou está vazio
+            if (!f.exists() || f.length() == 0) return new ArrayList<>();
 
             String encryptedData = Files.readString(f.toPath());
-            if (encryptedData.trim().isEmpty()) return new ArrayList<>(); // Se o conteúdo lido for vazio
+            if (encryptedData.trim().isEmpty()) return new ArrayList<>();
 
-            String jsonData = CryptoUtils.DecryptFileData(encryptedData); // Descriptografa os dados
+            String jsonData = CryptoUtils.DecryptFileData(encryptedData);
             return mapper.readValue(jsonData, new TypeReference<>() {});
         } catch (Exception e) {
-            System.err.println("Erro ao ler ou descriptografar o repositório de segredos de usuário: " + e.getMessage());
+            System.out.println("Erro ao ler ou descriptografar o repositório de segredos de usuário: " + e.getMessage());
             e.printStackTrace();
             return new ArrayList<>();
         }
@@ -73,7 +73,7 @@ public class UsersSecretsRepository {
      */
     public static Optional<UserSecret> SelectByName(String name) {
         return SelectAll().stream()
-                .filter(userSecret -> userSecret.Name.equalsIgnoreCase(name))
-                .findFirst();
+            .filter(userSecret -> userSecret.Name.equalsIgnoreCase(name))
+            .findFirst();
     }
 }

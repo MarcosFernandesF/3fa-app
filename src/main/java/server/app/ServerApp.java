@@ -28,7 +28,8 @@ public class ServerApp {
      * @param password Senha em texto claro
      * @return TOTP secret para ser armazenado no cliente.
      */
-    public static String RegisterUser(String name, String password) throws Exception {
+    public static String RegisterUser(String name, String password) throws Exception
+    {
         String country = IPUtils.GetCurrentCountry();
         byte[] salt = SecureRandom.getInstanceStrong().generateSeed(16);
         byte[] passwordHash = SCrypt.scrypt(password.getBytes(), salt, 16384, 8, 1, 32);
@@ -37,11 +38,11 @@ public class ServerApp {
         String totpSecret = new Base32().encodeToString(secretBytes);
 
         User user = new User(
-                name,
-                country,
-                Base64.getEncoder().encodeToString(passwordHash),
-                Base64.getEncoder().encodeToString(salt),
-                totpSecret
+            name,
+            country,
+            Base64.getEncoder().encodeToString(passwordHash),
+            Base64.getEncoder().encodeToString(salt),
+            totpSecret
         );
         UsersRepository.Add(user);
 
@@ -53,7 +54,8 @@ public class ServerApp {
      * @param name - Nome do usuário.
      * @return Usuário cadastrado ou nulo.
      */
-    public static User GetUserByName(String name) {
+    public static User GetUserByName(String name)
+    {
         Optional<User> opt = UsersRepository.SelectByName(name);
         if (opt.isEmpty())
         {
@@ -65,12 +67,12 @@ public class ServerApp {
 
     /**
      * Executa o processo de autenticação baseado nos 3 fatores (senha, localização e TOTP).
-     *
      * @param typedName Nome informado pelo usuário.
      * @param typedPassword Senha informada pelo usuário.
      * @return true se os três fatores forem validados com sucesso, false caso contrário.
      */
-    public static boolean IsUserAuthenticated(String typedName, String typedPassword) throws Exception {
+    public static boolean IsUserAuthenticated(String typedName, String typedPassword) throws Exception
+    {
         User user = ServerApp.GetUserByName(typedName);
         if (user == null) return false;
 
@@ -109,7 +111,8 @@ public class ServerApp {
      * @param typedPassword Senha digitada pelo usuário.
      * @return true se o hash da senha informada corresponder ao hash armazenado; false caso contrário.
      */
-    public static boolean IsPasswordCorrect(User user, String typedPassword) throws Exception {
+    public static boolean IsPasswordCorrect(User user, String typedPassword) throws Exception
+    {
         byte[] salt = Base64.getDecoder().decode(user.Salt);
         byte[] typedPasswordHash = SCrypt.scrypt(typedPassword.getBytes(), salt, 16384, 8, 1, 32);
         String typedPasswordHashBase64 = Base64.getEncoder().encodeToString(typedPasswordHash);
@@ -123,7 +126,8 @@ public class ServerApp {
      * @param user Usuário com país de origem previamente registrado.
      * @return true se o país atual for o mesmo do cadastro; false caso contrário.
      */
-    public static boolean IsLocationCorrect(User user) throws Exception {
+    public static boolean IsLocationCorrect(User user) throws Exception
+    {
         String currentCountry = IPUtils.GetCurrentCountry();
         return currentCountry.equalsIgnoreCase(user.Country);
     }
@@ -135,7 +139,8 @@ public class ServerApp {
      * @param typedTOTP Código TOTP informado pelo usuário (gerado por um autenticador).
      * @return true se o código TOTP for válido para o momento atual; false caso contrário.
      */
-    public static boolean IsTOTPCorrect(User user, String typedTOTP) throws Exception {
+    public static boolean IsTOTPCorrect(User user, String typedTOTP) throws Exception
+    {
         String expectedTotp = TOTP.getOTP(CryptoUtils.Base32ToHex(user.TOTPSecret));
         return expectedTotp.equals(typedTOTP);
     }
@@ -148,9 +153,15 @@ public class ServerApp {
      * @param safeMessage  Objeto {@link SafeMessage} contendo a mensagem cifrada, IV e TOTP usado.
      * @throws Exception Se ocorrer erro ao localizar o usuário, derivar a chave ou decifrar a mensagem.
      */
-    public static void ReceiveMessage(String userName, SafeMessage safeMessage) throws Exception {
-
+    public static void ReceiveMessage(String userName, SafeMessage safeMessage) throws Exception
+    {
         User user = GetUserByName(userName);
+
+        if (user == null)
+        {
+            System.out.println("Usuário não encontrado do lado do servidor");
+            return;
+        }
 
         SecretKey secretKey = CryptoUtils.GenerateKeyFromTOTP(user.TOTPSecret);
 

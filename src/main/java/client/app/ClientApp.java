@@ -11,10 +11,9 @@ import java.util.Base64;
 
 public class ClientApp {
 
-    public static void main(String[] args) throws Exception {
-
+    public static void main(String[] args) throws Exception
+    {
         CryptoUtils.InitializeFileEncryption();
-
 
         if (SignUpService.Prompt()) {
             SignUpService.Start();

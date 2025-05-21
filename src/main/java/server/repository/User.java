@@ -31,11 +31,6 @@ public class User {
     public String TOTPSecret;
 
     /**
-     * Construtor padrão necessário para serialização/deserialização JSON.
-     */
-    public User() {}
-
-    /**
      * Construtor com todos os parâmetros do usuário.
      * @param name         Nome do usuário
      * @param country      País do usuário (ex: \"BR\")

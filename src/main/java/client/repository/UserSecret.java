@@ -16,11 +16,6 @@ public class UserSecret {
     public String TOTPSecret;
 
     /**
-     * Construtor padrão necessário para serialização/deserialização JSON.
-     */
-    public UserSecret() {}
-
-    /**
      * Construtor que define o nome do usuário e o segredo TOTP.
      * @param name        Nome do usuário
      * @param totpSecret  Segredo TOTP em Base32

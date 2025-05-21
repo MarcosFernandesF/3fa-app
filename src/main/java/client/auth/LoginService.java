@@ -17,9 +17,10 @@ public class LoginService {
 
   /**
    * Inicia o processo de login com autenticação 3FA.
-   * @return O nome do usuário autenticado com sucesso ou null em caso de falha.
+   * @return Segredo do usuário armazenado no cliente em caso de sucesso ou nulo.
    */
-  public static UserSecret Start() throws Exception {
+  public static UserSecret Start() throws Exception
+  {
     Scanner sc = new Scanner(System.in);
 
     System.out.println("=== Login de Usuário ===");
@@ -38,7 +39,6 @@ public class LoginService {
       System.out.println("Usuário não encontrado no users-secrets.txt.");
       return null;
     }
-
     return optUserSecret.get();
   }
 }

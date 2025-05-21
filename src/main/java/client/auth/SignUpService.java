@@ -22,11 +22,7 @@ public class SignUpService {
   }
 
   /**
-   * Executa o processo completo de cadastro de um novo usuário:
-   * - Captura nome e senha
-   * - Obtém país via IP
-   * - Gera salt, hash da senha e segredo TOTP
-   * - Salva o usuário tanto no servidor quanto no cliente (para TOTP)
+   * Executa o processo completo de cadastro de um novo usuário.
    */
   public static void Start() {
     Scanner scanner = new Scanner(System.in);
@@ -41,7 +37,9 @@ public class SignUpService {
 
     try {
       String totpSecret = ServerApp.RegisterUser(typedName, typedPassword);
+
       UsersSecretsRepository.Add(new UserSecret(typedName, totpSecret));
+
       System.out.println("Usuário cadastrado com sucesso!");
     } catch (Exception e) {
       System.out.println("Erro ao cadastrar usuário.");

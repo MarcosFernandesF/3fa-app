@@ -25,8 +25,10 @@ public class MessageService {
    * Inicia o processo de envio de mensagens.
    * @param userSecret Secret do usuário armazenado no cliente.
    */
-  public static void Start(UserSecret userSecret) throws Exception {
+  public static void Start(UserSecret userSecret) throws Exception
+  {
     Scanner scanner = new Scanner(System.in);
+
     while (true) {
       System.out.println("== Enviar Mensagem Segura ==");
       System.out.print("Digite a mensagem a ser enviada: ");
@@ -61,8 +63,7 @@ public class MessageService {
 
       byte[] cipherBytes = cipher.doFinal(plainText.getBytes());
 
-      return new SafeMessage(Base64.getEncoder().encodeToString(iv), Base64.getEncoder().encodeToString(cipherBytes)
-      );
+      return new SafeMessage(Base64.getEncoder().encodeToString(iv), Base64.getEncoder().encodeToString(cipherBytes));
   }
 
 }
