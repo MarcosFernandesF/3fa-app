@@ -11,6 +11,7 @@ public class ClientApp {
 
         if (wannaSignUp) SignUpService.Start();
 
+        //commit teste
         String userName = LoginService.Start();
 
         if (userName != null) MessageService.Start(userName);
