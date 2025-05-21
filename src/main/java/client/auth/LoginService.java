@@ -1,5 +1,7 @@
 package client.auth;
 
+import client.repository.UserSecret;
+import client.repository.UsersSecretsRepository;
 import server.repository.User;
 
 import java.util.Optional;
@@ -17,7 +19,7 @@ public class LoginService {
    * Inicia o processo de login com autenticação 3FA.
    * @return O nome do usuário autenticado com sucesso ou null em caso de falha.
    */
-  public static User Start() throws Exception {
+  public static UserSecret Start() throws Exception {
     Scanner sc = new Scanner(System.in);
 
     System.out.println("=== Login de Usuário ===");
@@ -27,13 +29,16 @@ public class LoginService {
     System.out.print("Senha: ");
     String typedPassword = sc.nextLine();
 
-    User user = ServerApp.GetUserByName(typedName);
-    if (user == null) return null;
+    Optional<UserSecret> optUserSecret = UsersSecretsRepository.SelectByName(typedName);
+    if (optUserSecret.isEmpty()) {
+      System.out.println("Usuário não encontrado no users-secrets.json.");
+      return null;
+    }
 
-    boolean isAuthenticated = ServerApp.IsUserAuthenticated(user, typedPassword);
+    return optUserSecret.get();
 
-    if (!isAuthenticated) return null;
+    // boolean isAuthenticated = ServerApp.IsUserAuthenticated(typedName, typedPassword);
 
-    return user;
+    // if (!isAuthenticated) return null;
   }
 }

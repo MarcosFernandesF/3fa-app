@@ -1,5 +1,6 @@
 package client.message;
 
+import client.repository.UserSecret;
 import model.SafeMessage;
 import server.app.ServerApp;
 import server.repository.User;
@@ -22,17 +23,17 @@ public class MessageService {
 
   /**
    * Inicia o processo de envio de mensagens.
-   * @param user Usuário.
+   * @param userSecret Secret do usuário armazenado no cliente.
    */
-  public static void Start(User user) throws Exception {
+  public static void Start(UserSecret userSecret) throws Exception {
     Scanner scanner = new Scanner(System.in);
     while (true) {
       System.out.println("== Enviar Mensagem Segura ==");
       System.out.print("Digite a mensagem a ser enviada: ");
       String plainText = scanner.nextLine();
 
-      SafeMessage cipherText = GetSafeMessage(user, plainText);
-      ServerApp.ReceiveMessage(user, cipherText);
+      SafeMessage cipherText = GetSafeMessage(userSecret.TOTPSecret, plainText);
+      ServerApp.ReceiveMessage(userSecret.Name, cipherText);
 
       System.out.print("Deseja enviar outra mensagem? (Sim/Nao): ");
       String response = scanner.nextLine().trim();
@@ -45,26 +46,22 @@ public class MessageService {
 
   /**
    * Obtém uma mensagem segura utilizando AES-GCM e chave derivada do TOTP.
-   * @param user Usuário
+   * @param totpSecret Segredo TOTP do usuário.
    * @param plainText Mensagem em texto claro a ser cifrada
    * @return Objeto {@link SafeMessage} contendo TOTP, IV e texto cifrado
    */
-  public static SafeMessage GetSafeMessage(User user, String plainText) throws Exception {
-    String totp = TOTP.getOTP(CryptoUtils.Base32ToHex(user.TOTPSecret));
-    byte[] salt = Base64.getDecoder().decode(user.Salt);
-    SecretKey secretKey = CryptoUtils.GenerateKey(user.PasswordHash, salt, totp);
+  public static SafeMessage GetSafeMessage(String totpSecret, String plainText) throws Exception {
+      SecretKey secretKey = CryptoUtils.GenerateKeyFromTOTP(totpSecret);
 
-    byte[] iv = SecureRandom.getInstanceStrong().generateSeed(12);
-    Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-    GCMParameterSpec spec = new GCMParameterSpec(128, iv);
-    cipher.init(Cipher.ENCRYPT_MODE, secretKey, spec);
+      byte[] iv = SecureRandom.getInstanceStrong().generateSeed(12);
+      Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+      GCMParameterSpec spec = new GCMParameterSpec(128, iv);
+      cipher.init(Cipher.ENCRYPT_MODE, secretKey, spec);
 
-    byte[] cipherBytes = cipher.doFinal(plainText.getBytes());
+      byte[] cipherBytes = cipher.doFinal(plainText.getBytes());
 
-    return new SafeMessage(
-      totp,
-      Base64.getEncoder().encodeToString(iv),
-      Base64.getEncoder().encodeToString(cipherBytes)
-    );
+      return new SafeMessage(Base64.getEncoder().encodeToString(iv), Base64.getEncoder().encodeToString(cipherBytes)
+      );
   }
+
 }

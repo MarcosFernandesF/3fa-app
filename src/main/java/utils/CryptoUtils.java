@@ -1,5 +1,6 @@
 package utils;
 
+import de.taimos.totp.TOTP;
 import org.apache.commons.codec.binary.Base32;
 import org.apache.commons.codec.binary.Hex;
 
@@ -17,20 +18,15 @@ public class CryptoUtils {
     /**
      * Gera uma chave simétrica AES de 128 bits a partir de um hash de senha, um salt e um código TOTP.
      * Combina o hash da senha com o TOTP como entrada para um SHA-256, e usa os primeiros 16 bytes como chave AES.
-     * @param passwordHashBase64 Hash da senha em Base64 (gerado previamente com Scrypt).
-     * @param salt                Salt original usado na derivação do hash da senha.
-     * @param totp                Código TOTP atual (Time-based One-Time Password).
+     * @param totpSecret                Código TOTP atual (Time-based One-Time Password).
      * @return Chave secreta {@link SecretKey} derivada para uso com AES.
      */
-    public static SecretKey GenerateKey(String passwordHashBase64, byte[] salt, String totp) throws Exception {
-        byte[] passwordHash = Base64.getDecoder().decode(passwordHashBase64);
-        byte[] passwordPlusTOTP = new byte[passwordHash.length + totp.length()];
-
-        System.arraycopy(passwordHash, 0, passwordPlusTOTP, 0, passwordHash.length);
-        System.arraycopy(totp.getBytes(), 0, passwordPlusTOTP, passwordHash.length, totp.length());
-
-        byte[] finalKey = MessageDigest.getInstance("SHA-256").digest(passwordPlusTOTP);
-        return new SecretKeySpec(finalKey, 0, 16, "AES");
+    public static SecretKey GenerateKeyFromTOTP(String totpSecret) throws Exception {
+        String hexKey = Base32ToHex(totpSecret);
+        String totp = TOTP.getOTP(hexKey);
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        byte[] hash = digest.digest(totp.getBytes());
+        return new SecretKeySpec(hash, 0, 16, "AES");
     }
 
     /**

@@ -66,11 +66,13 @@ public class ServerApp {
     /**
      * Verifica se o usuário passou na autenticação de 3 fatores.
      *
-     * @param user Usuário já recuperado do repositório.
+     * @param typedName Nome informado pelo usuário.
      * @param typedPassword Senha informada pelo usuário.
      * @return true se os três fatores forem validados com sucesso, false caso contrário.
      */
-    public static Boolean IsUserAuthenticated(User user, String typedPassword) throws Exception {
+    public static Boolean IsUserAuthenticated(String typedName, String typedPassword) throws Exception {
+        User user = ServerApp.GetUserByName(typedName);
+        if (user == null) return false;
         return AuthenticationService.Authenticate(user, typedPassword);
     }
 
@@ -78,14 +80,16 @@ public class ServerApp {
      * Recebe e decifra uma mensagem segura enviada por um cliente autenticado.
      * O processo utiliza AES-GCM com uma chave derivada de TOTP + senha do usuário.
      *
-     * @param user Usuário.
+     * @param userName Nome do usuário.
      * @param safeMessage  Objeto {@link SafeMessage} contendo a mensagem cifrada, IV e TOTP usado.
      * @throws Exception Se ocorrer erro ao localizar o usuário, derivar a chave ou decifrar a mensagem.
      */
-    public static void ReceiveMessage(User user, SafeMessage safeMessage) throws Exception {
-        // Deriva a chave secreta usando o hash da senha, o salt e o TOTP enviado
-        byte[] salt = Base64.getDecoder().decode(user.Salt);
-        SecretKey secretKey = CryptoUtils.GenerateKey(user.PasswordHash, salt, safeMessage.TOTP);
+    public static void ReceiveMessage(String userName, SafeMessage safeMessage) throws Exception {
+
+        User user = GetUserByName(userName);
+
+        // Usa o TOTP que foi usado no cliente
+        SecretKey secretKey = CryptoUtils.GenerateKeyFromTOTP(user.TOTPSecret);
 
         // Inicializa o modo de decifragem AES-GCM
         Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");

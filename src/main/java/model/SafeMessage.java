@@ -7,11 +7,6 @@ package model;
 public class SafeMessage {
 
     /**
-     * Código TOTP utilizado no momento da geração da chave simétrica.
-     */
-    public String TOTP;
-
-    /**
      * Vetor de inicialização (IV) usado na cifragem com AES-GCM, codificado em Base64.
      */
     public String IV;
@@ -23,12 +18,10 @@ public class SafeMessage {
 
     /**
      * Construtor que inicializa todos os campos da mensagem segura.
-     * @param totp         Código TOTP utilizado na derivação da chave.
      * @param ivBase64     Vetor de inicialização (IV) em Base64.
      * @param cipherBase64 Mensagem cifrada em Base64.
      */
-    public SafeMessage(String totp, String ivBase64, String cipherBase64) {
-        this.TOTP = totp;
+    public SafeMessage(String ivBase64, String cipherBase64) {
         this.IV = ivBase64;
         this.CipherText = cipherBase64;
     }

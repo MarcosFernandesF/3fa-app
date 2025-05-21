@@ -3,6 +3,7 @@ package client.app;
 import client.auth.LoginService;
 import client.auth.SignUpService;
 import client.message.MessageService;
+import client.repository.UserSecret;
 import server.repository.User;
 
 public class ClientApp {
@@ -12,13 +13,13 @@ public class ClientApp {
 
         if (wannaSignUp) SignUpService.Start();
 
-        User user = LoginService.Start();
+        UserSecret userSecret = LoginService.Start();
 
-        if (user == null) {
+        if (userSecret == null) {
             System.out.println("Erro ao fazer login!");
             return;
         }
 
-        MessageService.Start(user);
+        MessageService.Start(userSecret);
     }
 }
