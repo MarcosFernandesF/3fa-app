@@ -31,7 +31,6 @@ public class MessageService {
             System.out.print("Digite a mensagem a ser enviada: ");
             String plainText = scanner.nextLine();
 
-            // GetSafeMessage agora retorna uma String (IV+CipherText em Base64)
             String encryptedMessagePayload = GetSafeMessage(userSecret.TOTPSecret, plainText);
             ServerApp.ReceiveMessage(userSecret.Name, encryptedMessagePayload);
 
