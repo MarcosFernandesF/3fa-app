@@ -12,6 +12,7 @@ import utils.IPUtils;
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
+import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.Optional;
@@ -21,6 +22,8 @@ import java.util.Scanner;
  * Aplicação do lado do servidor responsável por operações de autenticação 3FA e recebimento de mensagens.
  */
 public class ServerApp {
+
+    private static final int GCM_IV_LENGTH_BYTES = 12;
 
     /**
      * Cadastra um novo usuário no servidor.
@@ -153,25 +156,39 @@ public class ServerApp {
      * @param safeMessage  Objeto {@link SafeMessage} contendo a mensagem cifrada, IV e TOTP usado.
      * @throws Exception Se ocorrer erro ao localizar o usuário, derivar a chave ou decifrar a mensagem.
      */
-    public static void ReceiveMessage(String userName, SafeMessage safeMessage) throws Exception
-    {
+    /**
+     * Recebe e decifra uma mensagem segura enviada por um cliente autenticado.
+     * A mensagem é uma string Base64 contendo IV + CipherText.
+     *
+     * @param userName Nome do usuário.
+     * @param encryptedMessagePayload String Base64 contendo IV + CipherText.
+     * @throws Exception Se ocorrer erro ao localizar o usuário, derivar a chave ou decifrar a mensagem.
+     */
+    public static void ReceiveMessage(String userName, String encryptedMessagePayload) throws Exception {
         User user = GetUserByName(userName);
 
-        if (user == null)
-        {
-            System.out.println("Usuário não encontrado do lado do servidor");
+        if (user == null) {
+            System.out.println("Usuário '" + userName + "' não encontrado para receber mensagem.");
             return;
         }
 
         SecretKey secretKey = CryptoUtils.GenerateKeyFromTOTP(user.TOTPSecret);
 
+        // Decodificar a payload Base64
+        byte[] decodedIvAndCipherText = Base64.getDecoder().decode(encryptedMessagePayload);
+
+        // Separar IV e CipherText
+        byte[] iv = new byte[GCM_IV_LENGTH_BYTES];
+        System.arraycopy(decodedIvAndCipherText, 0, iv, 0, iv.length);
+
+        byte[] cipherBytes = new byte[decodedIvAndCipherText.length - iv.length];
+        System.arraycopy(decodedIvAndCipherText, iv.length, cipherBytes, 0, cipherBytes.length);
+
         Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-        byte[] iv = Base64.getDecoder().decode(safeMessage.IV);
-        byte[] cipherBytes = Base64.getDecoder().decode(safeMessage.CipherText);
         GCMParameterSpec spec = new GCMParameterSpec(128, iv);
         cipher.init(Cipher.DECRYPT_MODE, secretKey, spec);
 
-        String message = new String(cipher.doFinal(cipherBytes));
-        System.out.println("Mensagem recebida e decifrada: " + message);
+        String message = new String(cipher.doFinal(cipherBytes), StandardCharsets.UTF_8);
+        System.out.println("Mensagem recebida de '" + userName + "' e decifrada: " + message);
     }
 }

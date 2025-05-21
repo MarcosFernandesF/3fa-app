@@ -45,4 +45,7 @@ public class User {
         this.Salt = salt;
         this.TOTPSecret = totpSecret;
     }
+
+    public User() {
+    }
 }

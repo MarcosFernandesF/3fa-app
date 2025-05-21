@@ -24,4 +24,8 @@ public class UserSecret {
         this.Name = name;
         this.TOTPSecret = totpSecret;
     }
+
+    public UserSecret() {
+
+    }
 }
